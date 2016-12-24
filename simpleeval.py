@@ -201,7 +201,8 @@ DEFAULT_OPERATORS = {ast.Add: safe_add, ast.Sub: op.sub, ast.Mult: safe_mult,
 
 DEFAULT_FUNCTIONS = {"rand": random, "randint": random_int,
                      "int": int, "float": float,
-                     "str": str if PYTHON3 else unicode}
+                     "str": str if PYTHON3 else unicode,
+                     "list": list, "tuple": tuple, "dict": dict, "set": set}
 
 DEFAULT_NAMES = {"True": True, "False": False}
 
@@ -370,6 +371,16 @@ class SimpleEval(object):  # pylint: disable=too-few-public-methods
             if node.step is not None:
                 step = self._eval(node.step)
             return slice(lower, upper, step)
+
+        elif isinstance(node, ast.List):
+            return list(self._eval(x) for x in node.elts)
+        elif isinstance(node, ast.Tuple):
+            return tuple(self._eval(x) for x in node.elts)
+        elif isinstance(node, ast.Dict):
+            return {self._eval(k): self._eval(v) for (k, v) in zip(node.keys, node.values)}
+        elif isinstance(node, ast.Set):
+            return set(self._eval(x) for x in node.elts)
+
         else:
             raise FeatureNotAvailable("Sorry, {0} is not available in this "
                                       "evaluator".format(type(node).__name__))
